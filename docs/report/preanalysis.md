@@ -5,6 +5,7 @@ Derrick Burt, Department of Geography, Middlebury College, Middlebury VT 05753
 Drew An-Pham, Department of Geography, Middlebury College, Middlebury VT 05753  
 Peter Kedron, School of Geographical Sciences and Urban Planning, Arizona State University, Tempe AZ 85281  
 Junyi Zhou, Department of Geography, Middlebury College, Middlebury VT 05753  
+Grace Sokolow, Department of Geography, Middlebury College, Middlebury VT 05753
 
 Version 1.1 | Created Jul 7, 2021 | Last Updated June 2, 2022
 
@@ -240,6 +241,8 @@ There is no need for a **contingency plan** in this study.
 We plan to implement the analysis to the greatest extent possible in R / RStudio, using the geepack package for the generalized estimating equation and SpatialEpi package for the spatial scan statistics, whereas the original study was conducted using ArcGIS (Desktop v 10.7), SPSS, and SaTScan (v9.6).
 
 We will plan to check the normality of our distribution of our independent variables before correlations. If they are not normal, we may choose to calculate the bivariate correlation using a Spearman's Rho.
+
+We will also plan to create a visualized comparison of the counties included in Kulldorf clusters by the SaTScan software with those identified by the GEE model as having high weights (and low correlation with other counties in the same state). The intention behind this comparison is to better understand the role each method plays in cluster detection.
 
 ### Evaluating the reproduction results
 
