@@ -14,14 +14,14 @@ This will improve table legibility.
 
 3. Reformat the discission, including moving the section on paper rationatle, integrating 'Emily's Discussion' with the rest of the paper, and adding a brief conclusion. This will make the paper more conscise and bring its results, both in terms of reproducing the orginal study and new results genereted from making intentional deviations from it, into greater focus.
 
-4. Comparing the county selection of the Kulldorf clustering and the assignment of weight in the GEE model to see if the two methods are largely picking up the same signals, or have slight nuances.
+4. Create a visualization demonstrating how the GEE clusters are generated using, but distinct from, the SaTScan clusters. I will use the southwesten US as a case study, because it shows that there can be multiple SaTScan clusters within the same state (CA) and clusters that span multiple states and are thus divided in the GEE model (CA, NV).
 
 *** note to self : results/discussion and or change organization, definitely do another proofread
 ## Results
 1. The new map will have areas of low weight depicted in light orange and areas of high weight depicted in a darker shade.
 2. The table will render in the same format as the other tables in the paper. 
 3. The discussion section will be better organized and more easily understood.
-4. I will compare the counties included in the Kulldorf clusters produced by SaTScan and SpatialEpi with the counties identified in the GEE model as having low correlations with other counties in their state (and thus high weights)
+4. The visualization will demonstrate where the GEE cluster borders are in relation to the SaTScan clusters used to generate them.
 
 
 ## Discussion
@@ -31,4 +31,4 @@ This will improve table legibility.
 
 3. The new discussion, and in particular, the added conclusion, will comment on the success of the reproduction study and the applicability of the original study given the results of the reproduction.
 
-4. If the counties included in the Kulldorf clusters overlap with the counties assigned high weights in the GEE model, it would support the conclusion that these areas have unusally high COVID-19 risk. However, if the clusters are not the same, or if they differ slightly, it would open up avneues for further exploration between the two methods. 
+4. The new visualization will not yield any new results, but will help readers understand the relationship between the SaTScan clusters and the GEE clusters.
