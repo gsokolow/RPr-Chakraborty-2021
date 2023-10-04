@@ -1129,26 +1129,27 @@ tm_author_clusters <-
               palette = c("tomato", "thistle3"),
               popup.vars = c("fips", "clusterID"),
               colorNA = NULL,
-              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers") +
-  tm_shape(state) +
-    tm_borders("grey", lwd = 0.5) +
-  tm_shape(gini_circle) +
-    tm_borders(col = "thistle4") +
-    tm_text("NUMBER_LOC", size = 0.5) +
-  tm_shape(hier_circle) +
-    tm_borders(col = "tomato") +
-    tm_text("NUMBER_LOC", size = 0.5, ymod = 0.4) +
-  tm_layout(
-    legend.position = c("left", "bottom"),
-    legend.title.size = 0.8,
-    legend.text.size = 0.5
-  ) +
-  tm_add_legend('symbol',
-              	col = NA,
-              	border.col = c("tomato", "thistle4"),
-              	size = 0.7,
-              	labels = clus_labels,
-              	title="Cluster Extents")
+              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers")
+  # +
+  # tm_shape(state) +
+  #   tm_borders("grey", lwd = 0.5) +
+  # tm_shape(gini_circle) +
+  #   tm_borders(col = "thistle4") +
+  #   tm_text("NUMBER_LOC", size = 0.5) +
+  # tm_shape(hier_circle) +
+  #   tm_borders(col = "tomato") +
+  #   tm_text("NUMBER_LOC", size = 0.5, ymod = 0.4) +
+  # tm_layout(
+  #   legend.position = c("left", "bottom"),
+  #   legend.title.size = 0.8,
+  #   legend.text.size = 0.5
+  # ) +
+  # tm_add_legend('symbol',
+  #             	col = NA,
+  #             	border.col = c("tomato", "thistle4"),
+  #             	size = 0.7,
+  #             	labels = clus_labels,
+  #             	title="Cluster Extents")
 
 tm_author_clusters
 
@@ -1545,13 +1546,17 @@ This means that any given state may have one or more GEE clusters within it, but
   # Arizona: 04
 
 gee_example <- gee_data %>%
-  st_drop_geometry %>%
-  filter(statefp == '06'  | statefp == '04' | statefp == '32') 
+  filter(statefp == '06'  | statefp == '04' | statefp == '32') %>%
+# add column for each gee cluster
+  mutate(sc_id = paste(statefp,cluster_class))
+  
+
 
 #Visualize filtered GEE data and variables of interest: cluster_class (relative risk), cluster id (unique cluster identifier), isCluster (whether the county is the center of the cluster)
 gee_example %>%
+  st_drop_geometry %>%
   arrange(fips) %>%
-  select(statefp, cluster_class, clusterID, isCluster) %>%
+  select(statefp, cluster_class, sc_id, clusterID, isCluster) %>%
   kable(caption = "GEE Cluster IDs, Fips Codes, & Relative Risk for sample region") %>% kable_styling()
 ```
 
@@ -1576,18 +1581,39 @@ hier_circle <- satscan_rpr_col %>% filter(GINI_CLUST == 'F')
 ```{r map--GEE-sample-clusters}
 
 #PICK UP HERE, MAKE SURE TO ADJUST COLORS; WONT NEED ALL THREE BLOCKS
-tm_sample_clusters <-
-  tm_shape(state) +
+tm_sample_clusters <- gee_example %>%
+  tm_shape(state %>%
+             filter(STATEFP == '06'  | STATEFP == '04' | STATEFP == '32')) +
     tm_fill("gray98") +
   tm_shape(gee_example) +
-  tm_polygons(col = "clusterID",
-              labels = clusterID,
+  tm_polygons(col = char("cluster_class"),
+              labels = c("1", "2", "3", "4", "5", "6"),
               border.col = "white",
+              #line width
               lwd = 0.5,
-              palette = c("tomato", "thistle3"),
-              popup.vars = c("fips", "clusterID"),
+              palette = c('#a6cee3','#1f78b4','#b2df8a',
+                          '#33a02c','#fb9a99','#e31a1c'),
+              #popup.vars = c("fips", "clusterID"),
               colorNA = NULL,
-              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers, FILTERED") +
+              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers, FILTERED") 
+
+# # +   tm_layout(
+#     legend.position = c("left", "bottom"),
+#     legend.title.size = 0.8,
+#     legend.text.size = 0.5
+#   ) +
+# tm_add_legend('symbol',
+#               	col = NA,
+#               	border.col = c("tomato", "thistle4"),
+#               	size = 0.7,
+#               	labels = clus_labels,
+#               	title="Cluster Extents")
+
+#visualize
+tm_sample_clusters
+
+```
++
   tm_shape(state) +
     tm_borders("grey", lwd = 0.5) +
   tm_shape(gini_circle) +
@@ -1611,29 +1637,7 @@ tm_sample_clusters <-
 tm_author_clusters
 
 rm(gini_circle, hier_circle, clus_counts, clus_labels)
-```
 
-acs_covid %>%
-  st_drop_geometry %>%
-  filter(covid_rate != or_incidence) %>%
-  arrange(fips) %>%
-  select(county_st, covid_rate, or_incidence) %>%
-  kable(caption = "Original incidence rate joined to reproduction data") %>% kable_styling()
-
-table(acs_covid$cluster_class, acs_covid$gini_class) %>%
-  kable(row.names = TRUE, caption = "COVID-19 Risk Class by County", align = "c") %>%
-  column_spec(2:7, width = "3em") %>%
-  column_spec(1, bold = TRUE) %>%
-  row_spec(2, bold = TRUE) %>%
-  add_header_above(c("SpatialEpi" = 1, "SatScan" = 6)) %>%
-  kable_styling(full_width = FALSE, row_label_position = "c")
-
-original_gee %>%
-    filter(Cases > 0) %>%
-    arrange(COUNTY_FIPS) %>%
-    
-  round(digits = 3)
-```
 
 ```
 
