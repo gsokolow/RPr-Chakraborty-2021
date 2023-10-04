@@ -1361,7 +1361,7 @@ The maps and crosstabulation above indicate that there are important differences
 We summarize our understanding of the computational differences for default settings below, based on close examination of our software outputs, technical documentation for SaTScan, and the documentation and code repository for SpatialEpi.
 
 |                          |      SaTScan Hierarchical      |            SaTScan GINI            |                  SpatialEpi                  |
-|:---------------:|:---------------:|:---------------:|:--------------------:|
+|:---------------:|:---------------:|:---------------:|:------------------:|
 |     possible shapes      |  circle (default) or ellipse   |    circle (default) or ellipse     |                    circle                    |
 | possible cluster centers | locations with rates \> normal |   locations with rates \> normal   |                all locations                 |
 |   maximum cluster size   |          50% of cases          | varies, not exceeding 50% of cases |              50% of population               |
@@ -1529,6 +1529,170 @@ Additionally, the author noted that "clusters of observations must be defined ba
 These specifications were chosen after testing each alternative and choosing the models with the best quasilikelihood under the independence model criterion (QIC).
 
 This accomplishes the step 11 of the workflow diagram.
+
+###How does the GEE Model use Kulldorff Clusters?
+The GEE Model uses pre-defined clusters to introduce the possibility that the independent variables (COVID risk) may be correlated between counties. The Kulldorff clusters identified by SaTScan and SpatialEpi present likely groups of counties with correlated COVID risk. Chakraborty combined these Kulldorff clusters with state codes to create the predefined GEE clusters. Thus, the GEE model is accounting for potential correlation between counties which are 1. in the same state, and thus may have experienced similar COVID responses, and 2. have been identified (either by SaTScan or SpatialEpi) to have similar relative COVID risk. 
+
+This means that any given state may have one or more GEE clusters within it, but that Kulldorf clusters previously crossing state lines are divided into multiple clusters. Furthermore, if a state has multiple clusters with the same relative risk, those clusters would be combined into one spatially discontinuous cluster. This is visualized here:
+
+```{r create-sample-gee_dataset}
+## Create sample region dataset
+#Load GEE data
+# Filter by State FP to create our sample region
+# from https://www.mercercountypa.gov/dps/state_fips_code_listing.htm
+  # California: 06
+  # Nevada: 32
+  # Arizona: 04
+
+gee_example <- gee_data %>%
+  st_drop_geometry %>%
+  filter(statefp == '06'  | statefp == '04' | statefp == '32') 
+
+#Visualize filtered GEE data and variables of interest: cluster_class (relative risk), cluster id (unique cluster identifier), isCluster (whether the county is the center of the cluster)
+gee_example %>%
+  arrange(fips) %>%
+  select(statefp, cluster_class, clusterID, isCluster) %>%
+  kable(caption = "GEE Cluster IDs, Fips Codes, & Relative Risk for sample region") %>% kable_styling()
+```
+
+Now that we've established our study region, we can visualize it:
+
+This is code that i haven't looked at yet
+# count frequencies of each cluster type
+clus_counts <- satscan_rpr_col %>%
+  st_drop_geometry() %>%
+  group_by(GINI_CLUST) %>%
+  summarize(n = n())
+
+# create labels including frequencies in brackets
+clus_labels <- c(paste0("Hierarchical (", clus_counts[1,2], ")"),
+            paste0("GINI Optimized (", clus_counts[2,2], ")"))
+
+# for clusters with only one county, erase the number of counties
+satscan_rpr_col[which(satscan_rpr_col$NUMBER_LOC < 3), ]$NUMBER_LOC <- NA
+
+gini_circle <- satscan_rpr_col %>% filter(GINI_CLUST == 'T')
+hier_circle <- satscan_rpr_col %>% filter(GINI_CLUST == 'F')
+```{r map--GEE-sample-clusters}
+
+#PICK UP HERE, MAKE SURE TO ADJUST COLORS; WONT NEED ALL THREE BLOCKS
+tm_sample_clusters <-
+  tm_shape(state) +
+    tm_fill("gray98") +
+  tm_shape(gee_example) +
+  tm_polygons(col = "clusterID",
+              labels = clusterID,
+              border.col = "white",
+              lwd = 0.5,
+              palette = c("tomato", "thistle3"),
+              popup.vars = c("fips", "clusterID"),
+              colorNA = NULL,
+              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers, FILTERED") +
+  tm_shape(state) +
+    tm_borders("grey", lwd = 0.5) +
+  tm_shape(gini_circle) +
+    tm_borders(col = "thistle4") +
+    tm_text("NUMBER_LOC", size = 0.5) +
+  tm_shape(hier_circle) +
+    tm_borders(col = "tomato") +
+    tm_text("NUMBER_LOC", size = 0.5, ymod = 0.4) +
+  tm_layout(
+    legend.position = c("left", "bottom"),
+    legend.title.size = 0.8,
+    legend.text.size = 0.5
+  ) +
+  tm_add_legend('symbol',
+              	col = NA,
+              	border.col = c("tomato", "thistle4"),
+              	size = 0.7,
+              	labels = clus_labels,
+              	title="Cluster Extents")
+
+tm_author_clusters
+
+rm(gini_circle, hier_circle, clus_counts, clus_labels)
+```
+
+acs_covid %>%
+  st_drop_geometry %>%
+  filter(covid_rate != or_incidence) %>%
+  arrange(fips) %>%
+  select(county_st, covid_rate, or_incidence) %>%
+  kable(caption = "Original incidence rate joined to reproduction data") %>% kable_styling()
+
+table(acs_covid$cluster_class, acs_covid$gini_class) %>%
+  kable(row.names = TRUE, caption = "COVID-19 Risk Class by County", align = "c") %>%
+  column_spec(2:7, width = "3em") %>%
+  column_spec(1, bold = TRUE) %>%
+  row_spec(2, bold = TRUE) %>%
+  add_header_above(c("SpatialEpi" = 1, "SatScan" = 6)) %>%
+  kable_styling(full_width = FALSE, row_label_position = "c")
+
+original_gee %>%
+    filter(Cases > 0) %>%
+    arrange(COUNTY_FIPS) %>%
+    
+  round(digits = 3)
+```
+
+```
+
+## LOAD MAP OF AUTHOR GENERATED KULLDORF CLUSTERS
+# count frequencies of each cluster type
+clus_counts <- satscan_rpr_col %>%
+  st_drop_geometry() %>%
+  group_by(GINI_CLUST) %>%
+  summarize(n = n())
+
+# create labels including frequencies in brackets
+clus_labels <- c(paste0("Hierarchical (", clus_counts[1,2], ")"),
+            paste0("GINI Optimized (", clus_counts[2,2], ")"))
+
+# for clusters with only one county, erase the number of counties
+satscan_rpr_col[which(satscan_rpr_col$NUMBER_LOC < 3), ]$NUMBER_LOC <- NA
+
+gini_circle <- satscan_rpr_col %>% filter(GINI_CLUST == 'T')
+hier_circle <- satscan_rpr_col %>% filter(GINI_CLUST == 'F')
+
+tm_author_clusters <-
+  tm_shape(state) +
+    tm_fill("gray98") +
+  tm_shape(acs_covid) +
+  tm_polygons(col = "GINI_CLUST",
+              labels = clus_labels,
+              border.col = "white",
+              lwd = 0.5,
+              palette = c("tomato", "thistle3"),
+              popup.vars = c("fips", "clusterID"),
+              colorNA = NULL,
+              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers") +
+  tm_shape(state) +
+    tm_borders("grey", lwd = 0.5) +
+  tm_shape(gini_circle) +
+    tm_borders(col = "thistle4") +
+    tm_text("NUMBER_LOC", size = 0.5) +
+  tm_shape(hier_circle) +
+    tm_borders(col = "tomato") +
+    tm_text("NUMBER_LOC", size = 0.5, ymod = 0.4) +
+  tm_layout(
+    legend.position = c("left", "bottom"),
+    legend.title.size = 0.8,
+    legend.text.size = 0.5
+  ) +
+  tm_add_legend('symbol',
+              	col = NA,
+              	border.col = c("tomato", "thistle4"),
+              	size = 0.7,
+              	labels = clus_labels,
+              	title="Cluster Extents")
+
+tm_author_clusters
+
+rm(gini_circle, hier_circle, clus_counts, clus_labels)
+# 
+
+
+```
 
 Generalized Estimating Equation parameters:
 
