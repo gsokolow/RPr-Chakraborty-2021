@@ -1572,21 +1572,21 @@ Now that we've established our study region, we can visualize it:
 ```{r map--GEE-sample-clusters}
 
 #This map is not rendering due to an unsolved issue with input type.
-tm_sample_clusters <- gee_example %>%
+tm_sample_clusters <- 
   tm_shape(state %>%
-             filter(STATEFP == '06'  | STATEFP == '04' | STATEFP == '32')) +
+           filter(STATEFP == '06'  | STATEFP == '04' | STATEFP == '32')) +
     tm_fill("gray98") +
-  tm_shape(gee_example) +
-  tm_polygons(col = char("cluster_class"),
-              labels = c("1", "2", "3", "4", "5", "6"),
-              border.col = "white",
-              #line width
-              lwd = 0.5,
-              palette = c('#a6cee3','#1f78b4','#b2df8a',
-                          '#33a02c','#fb9a99','#e31a1c'),
-              #popup.vars = c("fips", "clusterID"),
-              colorNA = NULL,
-              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers, FILTERED") 
+tm_shape(gee_example) +
+tm_polygons(col = char("sc_id"),
+            labels = c("1", "2", "3", "4", "5", "6"),
+            border.col = "white",
+            #line width
+            lwd = 0.5,
+            palette = c('#a6cee3','#1f78b4','#b2df8a',
+                        '#33a02c','#fb9a99','#e31a1c'),
+            #popup.vars = c("fips", "clusterID"),
+            colorNA = NULL,
+            title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers, FILTERED")
 
 # # +   tm_layout(
 #     legend.position = c("left", "bottom"),
