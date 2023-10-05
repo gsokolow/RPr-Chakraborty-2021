@@ -1129,27 +1129,26 @@ tm_author_clusters <-
               palette = c("tomato", "thistle3"),
               popup.vars = c("fips", "clusterID"),
               colorNA = NULL,
-              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers")
-  # +
-  # tm_shape(state) +
-  #   tm_borders("grey", lwd = 0.5) +
-  # tm_shape(gini_circle) +
-  #   tm_borders(col = "thistle4") +
-  #   tm_text("NUMBER_LOC", size = 0.5) +
-  # tm_shape(hier_circle) +
-  #   tm_borders(col = "tomato") +
-  #   tm_text("NUMBER_LOC", size = 0.5, ymod = 0.4) +
-  # tm_layout(
-  #   legend.position = c("left", "bottom"),
-  #   legend.title.size = 0.8,
-  #   legend.text.size = 0.5
-  # ) +
-  # tm_add_legend('symbol',
-  #             	col = NA,
-  #             	border.col = c("tomato", "thistle4"),
-  #             	size = 0.7,
-  #             	labels = clus_labels,
-  #             	title="Cluster Extents")
+              title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers")+
+  tm_shape(state) +
+    tm_borders("grey", lwd = 0.5) +
+  tm_shape(gini_circle) +
+    tm_borders(col = "thistle4") +
+    tm_text("NUMBER_LOC", size = 0.5) +
+  tm_shape(hier_circle) +
+    tm_borders(col = "tomato") +
+    tm_text("NUMBER_LOC", size = 0.5, ymod = 0.4) +
+  tm_layout(
+    legend.position = c("left", "bottom"),
+    legend.title.size = 0.8,
+    legend.text.size = 0.5
+  ) +
+  tm_add_legend('symbol',
+              	col = NA,
+              	border.col = c("tomato", "thistle4"),
+              	size = 0.7,
+              	labels = clus_labels,
+              	title="Cluster Extents")
 
 tm_author_clusters
 
@@ -1569,16 +1568,29 @@ gee_example %>%
 
 Now that we've established our study region, we can visualize it:
 
-```{r map--GEE-sample-clusters}
+```{r filter--GEE-sample-clusters}
 
-#This map is not rendering due to an unsolved issue with input type.
+#Filter states dataset by study region
+study_state <- filter(state, STATEFP == '06'  | STATEFP == '04' | STATEFP == '32')
+# filter example data for target clusters:
+# 062 and 322 show a cluster getting separated by state line
+# 041 shows discontinuous clusters being joined
+# 045 shows a cluster that doesnt change
+study_gee <- filter (gee_example, sc_id == '06 2' | sc_id == '32 2' | sc_id == '04 1' | sc_id == '04 5')
+
+
+study_labels <- c('AZ 1', 'AZ 5', 'CA 2', 'NV 2')
+
+```
+
+```{r map-gee-sample-clusters}
+
 tm_sample_clusters <- 
-  tm_shape(state %>%
-           filter(STATEFP == '06'  | STATEFP == '04' | STATEFP == '32')) +
-    tm_fill("gray98") +
-tm_shape(gee_example) +
+  tm_shape(study_state) +
+    tm_fill("gray") +
+tm_shape(study_gee) +
 tm_polygons(col = char("sc_id"),
-            labels = c("1", "2", "3", "4", "5", "6"),
+            labels = study_labels,
             border.col = "white",
             #line width
             lwd = 0.5,
@@ -1586,7 +1598,10 @@ tm_polygons(col = char("sc_id"),
                         '#33a02c','#fb9a99','#e31a1c'),
             #popup.vars = c("fips", "clusterID"),
             colorNA = NULL,
-            title = "SaTScan Kulldorff COVID-19 Clusters\nCluster Centers, FILTERED")
+            title = "Sample GEE Clusters in the Southwestern US")+
+  tm_shape(study_state) +
+    tm_borders("black")
+  
 
 # # +   tm_layout(
 #     legend.position = c("left", "bottom"),
